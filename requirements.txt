@@ -1,0 +1,9 @@
+chainer==6.5.0
+cupy==6.5.0
+imgaug==0.3.0
+numpy==1.16.3
+opencv-python
+Pillow==5.4.1
+scikit-learn==0.20.2
+Shapely==1.6.4.post2
+tqdm==4.29.1
