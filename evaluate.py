@@ -1,8 +1,6 @@
 import argparse
-import importlib
 import json
 import os
-import xml.etree.ElementTree as ET
 from collections import defaultdict
 
 import chainer
@@ -24,13 +22,10 @@ import re
 from chainer import configuration
 from chainer import reporter as reporter_module
 from chainer.backends import cuda
-from chainercv.utils import non_maximum_suppression
 from tqdm import tqdm
-from xml.dom import minidom
 
 from insights.bbox_plotter import get_next_color
 from train_utils.datatypes import Size
-from train_utils.match_bbox import get_aabb_corners
 
 
 class Evaluator:
@@ -81,7 +76,7 @@ class Evaluator:
         log_keys = ['use_group_norm', 'rotation_ratio', 'num_bboxes_to_localize', 'num_layers', 'rotation_dropout_ratio']
         localizer_args = {key: log_data[key] for key in log_keys if key in log_data}
         if 'num_bboxes_to_localize' not in localizer_args:
-            localizer_args['num_bboxes_to_localize'] = self.data_loader.num_words_per_image
+            localizer_args['num_bboxes_to_localize'] = self.data_loader.num_chars_per_word
         if 'rotation_dropout_ratio' in localizer_args:
             localizer_args['dropout_ratio'] = localizer_args['rotation_dropout_ratio']
 
