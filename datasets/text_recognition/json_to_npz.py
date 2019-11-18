@@ -38,7 +38,7 @@ def main(args):
             continue
 
         for key, value in item.items():
-            if key == 'bounding_boxes':
+            if 'bounding_boxes' in key:
                 # we do not need any bounding boxes!
                 continue
             if isinstance(value, list):

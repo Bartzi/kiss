@@ -16,18 +16,13 @@ def main(args):
 
     number_of_images = len(gt_data)
     num_validation_images = int(number_of_images * args.val_ratio)
-    num_reference_images = int(number_of_images * args.ref_ratio)
 
     random.shuffle(gt_data)
 
     validation_images = gt_data[:num_validation_images]
-    reference_images = gt_data[num_validation_images:num_validation_images + num_reference_images]
-    train_images = gt_data[num_validation_images + num_reference_images:]
+    train_images = gt_data[num_validation_images:]
 
     gt_dir = os.path.dirname(args.gt_file)
-
-    with open(os.path.join(gt_dir, "reference_base.json"), "w") as f:
-        json.dump(reference_images, f, indent=2)
 
     with open(os.path.join(gt_dir, "validation.json"), "w") as f:
         if metadata is not None:
@@ -44,7 +39,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Tool that takes a gt json file and creates a training, validation and reference gt")
     parser.add_argument("gt_file")
     parser.add_argument("--val-ratio", type=float, default=0.1, help="ratio for validation images")
-    parser.add_argument("--ref-ratio", type=float, default=0.1, help="ratio of reference images")
 
     args = parser.parse_args()
     main(args)
