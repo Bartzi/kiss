@@ -2,14 +2,9 @@ from functools import reduce
 
 import chainer
 import chainer.functions as F
-import chainer.links as L
-import math
 from chainer import Chain
 from chainer.backends import cuda
-from chainer.links.model.vision.resnet import _global_average_pooling_2d
 
-from functions.rotation_droput import rotation_dropout
-from functions.transform_param_functions import create_translation_matrix, create_rotation_matrix, create_zoom_matrix
 from insights.visual_backprop import VisualBackprop
 from resnet.resnet_gn import ResNet
 from train_utils.autocopy import maybe_copy
@@ -30,23 +25,6 @@ class TextLocalizer(Chain):
 
         with self.init_scope():
             self.feature_extractor = ResNet(kwargs.pop('num_layers', 18))
-            # self.pre_transform_params = L.GRU(None, 1024)
-            # self.transform_params = L.GRU(1024, 6)
-            # self.pre_transform_params = L.Linear(None, self.num_bboxes_to_localize * self.features_per_timestep)
-            # self.backward_lstm = L.LSTM(None, 1024)
-            # self.lstm = L.GRU(None, 1024)
-            # self.intermediate = L.Linear(None, 1024)
-
-            # self.translation_param_predictor = L.Linear(1024, 2)
-            # self.rotation_param_predictor = L.Linear(1024, 1)
-            # self.zoom_param_predictor = L.Linear(1024, 2)
-            #
-            # self.translation_param_predictor.b.data[...] = 0
-            # self.translation_param_predictor.W.data[...] = 0
-            # self.rotation_param_predictor.b.data[...] = 0
-            # self.rotation_param_predictor.W.data[...] = 0
-            # self.zoom_param_predictor.b.data[...] = 0.8
-            # self.zoom_param_predictor.W.data[...] = 0
 
         self.visual_backprop = VisualBackprop()
         self.visual_backprop_anchors = []
@@ -58,9 +36,6 @@ class TextLocalizer(Chain):
     @maybe_copy
     def __call__(self, images):
         self.visual_backprop_anchors.clear()
-        # self.backward_lstm.reset_state()
-        # self.param_predictor.reset_state()
-
         h = self.feature_extractor(images)
         self.visual_backprop_anchors.append(h)
 
@@ -68,12 +43,6 @@ class TextLocalizer(Chain):
         transform_params = self.get_transform_params(h)
 
         boxes = F.spatial_transformer_grid(transform_params, self.out_size)
-
-        # if chainer.config.train:
-        #     # emulate behaviour of a rpn by shifting the bbox a little and adding more virtual predictions
-        #     boxes = self.virtual_box_number_increase(boxes, images.shape[-2:])
-        #     num_boxes *= boxes.shape[1]
-        #     boxes = F.reshape(boxes, (-1,) + boxes.shape[2:])
 
         expanded_images = F.broadcast_to(F.expand_dims(images, axis=1), (batch_size, self.num_bboxes_to_localize) + images.shape[1:])
         expanded_images = F.reshape(expanded_images, (-1,) + expanded_images.shape[2:])
@@ -89,43 +58,6 @@ class TextLocalizer(Chain):
 
     def get_transform_params(self, features):
         raise NotImplementedError
-
-    def drop_params(self, transform_params, dropout_params):
-        transform_params = transform_params * F.broadcast_to(
-            self.xp.array(dropout_params, dtype=chainer.get_dtype())[None, ...],
-            (len(transform_params), 6)
-        )
-        return transform_params
-
-    def combine_transformation_params(self, params):
-        params = [self.pad_transformation_params(param) for param in params]
-
-        combined_params = reduce(lambda x, y: F.matmul(x, y), params)
-        return combined_params[:, :2, :]
-
-    def pad_transformation_params(self, transformation_params):
-        transformation_params = F.reshape(transformation_params, (-1, 2, 3))
-        transformation_params = F.concat(
-            (
-                transformation_params,
-                self.xp.tile(
-                    self.xp.array([0, 0, 1], dtype=chainer.get_dtype()),
-                    (len(transformation_params), 1, 1)
-                )
-            ),
-            axis=1
-        )
-        return transformation_params
-
-    def create_transform_matrix(self, params, matrix_type):
-        if matrix_type == "translation":
-            return create_translation_matrix(params)
-        elif matrix_type == "rotation":
-            return create_rotation_matrix(params)
-        elif matrix_type == "zoom":
-            return create_zoom_matrix(params)
-        else:
-            raise ValueError(f"matrix type {matrix_type} is not supported!")
 
     @maybe_copy
     def predict(self, images, return_visual_backprop=False):

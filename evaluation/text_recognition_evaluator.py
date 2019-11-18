@@ -43,7 +43,6 @@ class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
     def __call__(self, **kwargs):
         image = kwargs.pop('image', None)
         words = kwargs.pop('words', None)
-        masks = kwargs.pop('masks', None)
         return_predictions = kwargs.pop('return_predictions', False)
 
         with cuda.Device(self.device):
@@ -55,25 +54,6 @@ class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
             bboxes = self.xp.reshape(bboxes.array, (-1, 2, height, width))
 
             self.calc_word_accuracy(predicted_words, words)
-
-            # masks = self.ndarray_to_list(masks)
-            # num_predicted_chars = self.get_number_of_predicted_characters(predicted_words)
-            #
-            # batch_size, num_predicted_masks, pred_masks = self.bboxes_to_masks(bboxes, image)
-            # pred_masks = self.zero_results_without_expected_prediction(num_predicted_chars, pred_masks)
-            # pred_masks = self.ndarray_to_list(pred_masks)
-            #
-            # predicted_scores = self.assessor.extract_iou_prediction(self.assessor(rois)).data.reshape(batch_size, num_predicted_masks)
-            # predicted_scores = self.zero_results_without_expected_prediction(num_predicted_chars, predicted_scores)
-            # predicted_scores = self.ndarray_to_list(predicted_scores)
-            # pred_masks, predicted_scores = self.perform_nms(batch_size, bboxes, num_predicted_masks, pred_masks, predicted_scores)
-
-            # ious = self.xp.concatenate(self.calculate_iou(pred_masks, masks))
-            # mean_iou = float(self.xp.sum(ious) / len(ious))
-            # reporter.report({'mean_iou': mean_iou})
-
-            # result = self.calculate_map(pred_masks, predicted_scores, masks)
-            # reporter.report({'map': result['map']})
 
         if return_predictions:
             return rois, bboxes, predicted_words
@@ -178,6 +158,8 @@ class TextRecognitionTestFunction(TextRecognitionEvaluatorFunction):
             for j, image_variant in enumerate(image):
                 num_predictions = len([prediction for prediction in image_variant if prediction.array != self.blank_label_class])
                 probs = F.max(distribution[i, j, :num_predictions], axis=1).array
+                if len(probs) == 0:
+                    means.append(self.xp.array(0, dtype=probs.dtype))
                 means.append(self.xp.mean(probs))
             means = self.xp.stack(means, axis=0)
             scores.append(means)

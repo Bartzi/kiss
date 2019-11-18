@@ -1,16 +1,11 @@
 import base64
 import json
-
-import cupy
 import os
 import socket
-
 from io import BytesIO
 
 import chainer.functions as F
 import matplotlib
-
-from functions.contextual_loss import contextual_loss
 
 matplotlib.use('AGG')
 import matplotlib.pyplot as plt
