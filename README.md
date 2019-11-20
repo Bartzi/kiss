@@ -1,5 +1,5 @@
 # KISS
-Code for the paper [KISS: Keeping it Simple for Scene Text Recognition](Arxiv URL will be here soon).
+Code for the paper [KISS: Keeping it Simple for Scene Text Recognition](https://arxiv.org/abs/1911.08400).
 
 This repository contains the code you can use in order to train a model based on our paper.
 You will also find instructions on how to access our model and also how to evaluate the model.
