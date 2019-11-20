@@ -223,54 +223,53 @@ def main():
 
     evaluation_function = TextRecognitionEvaluatorFunction(localizer, recognizer, args.gpu[0], train_dataset.blank_label, train_dataset.char_map)
 
-    if args.validation:
-        # fast evaluator
+
+    trainer.extend(
+        TextRecognitionTensorboardEvaluator(
+            validation_iter,
+            localizer,
+            device=args.gpu[0],
+            eval_func=evaluation_function,
+            tensorboard_handle=tensorboard_handle,
+            num_iterations=200,
+        ),
+        trigger=(args.test_interval, 'iteration'),
+    )
+
+    # every epoch run the model on test datasets
+    test_dataset_prefix = "test_dataset_"
+    test_datasets = [arg for arg in dir(args) if arg.startswith(test_dataset_prefix)]
+    for test_dataset_name in test_datasets:
+        print(f"setting up testing for {test_dataset_name[len(test_dataset_prefix):]} dataset")
+
+        dataset_path = getattr(args, test_dataset_name)
+        if args.use_memory_manager:
+            test_kwargs = {"memory_manager": memory_manager, "base_name": test_dataset_name}
+        else:
+            test_kwargs = {"npz_file": dataset_path}
+
+        test_dataset = TextRecognitionImageDataset(
+            char_map=args.char_map,
+            image_size=args.image_size,
+            root=os.path.dirname(dataset_path),
+            dtype=chainer.get_dtype(),
+            transform_probability=0,
+            keep_aspect_ratio=True,
+            image_mode=args.image_mode,
+            **test_kwargs,
+        )
+        test_iter = chainer.iterators.MultithreadIterator(test_dataset, args.batch_size, repeat=False)
         trainer.extend(
             TextRecognitionTensorboardEvaluator(
-                validation_iter,
+                test_iter,
                 localizer,
                 device=args.gpu[0],
                 eval_func=evaluation_function,
                 tensorboard_handle=tensorboard_handle,
-                num_iterations=200,
+                base_key=test_dataset_name[len(test_dataset_prefix):]
             ),
-            trigger=(args.test_interval, 'iteration'),
+            trigger=(args.snapshot_interval, 'iteration')
         )
-
-        # every epoch run the model on test datasets
-        test_dataset_prefix = "test_dataset_"
-        test_datasets = [arg for arg in dir(args) if arg.startswith(test_dataset_prefix)]
-        for test_dataset_name in test_datasets:
-            print(f"setting up testing for {test_dataset_name[len(test_dataset_prefix):]} dataset")
-
-            dataset_path = getattr(args, test_dataset_name)
-            if args.use_memory_manager:
-                test_kwargs = {"memory_manager": memory_manager, "base_name": test_dataset_name}
-            else:
-                test_kwargs = {"npz_file": dataset_path}
-
-            test_dataset = TextRecognitionImageDataset(
-                char_map=args.char_map,
-                image_size=args.image_size,
-                root=os.path.dirname(dataset_path),
-                dtype=chainer.get_dtype(),
-                transform_probability=0,
-                keep_aspect_ratio=True,
-                image_mode=args.image_mode,
-                **test_kwargs,
-            )
-            test_iter = chainer.iterators.MultithreadIterator(test_dataset, args.batch_size, repeat=False)
-            trainer.extend(
-                TextRecognitionTensorboardEvaluator(
-                    test_iter,
-                    localizer,
-                    device=args.gpu[0],
-                    eval_func=evaluation_function,
-                    tensorboard_handle=tensorboard_handle,
-                    base_key=test_dataset_name[len(test_dataset_prefix):]
-                ),
-                trigger=(args.snapshot_interval, 'iteration')
-            )
 
     models.append(updater)
     logger = Logger(
@@ -286,12 +285,8 @@ def main():
         plot_image = train_dataset.load_image(args.test_image)
         gt_bbox = None
     else:
-        if args.validation:
-            plot_image = validation_dataset.get_example(0)['image']
-            gt_bbox = None
-        else:
-            plot_image = train_dataset.get_example(0)['image']
-            gt_bbox = None
+        plot_image = validation_dataset.get_example(0)['image']
+        gt_bbox = None
 
     bbox_plotter = TextRecognitionBBoxPlotter(
         plot_image,
