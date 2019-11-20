@@ -76,12 +76,12 @@ For getting the evaluation data you just need to do 2 steps per dataset:
 
 | Dataset  | Git Repo | NPZ-Link | Note |
 |---|---|---|---|
-| ICDAR2013 | https://github.com/ocr-algorithm-and-data/ICDAR2013 | `TBD` | Rename the directory `test` to `Challenge2_Test_Task3_Images` |
-| ICDAR2015 | https://github.com/ocr-algorithm-and-data/ICDAR2015 | `TBD` | Rename the dir `TestSet` to `ch4_test_word_images_gt` |
-| CUTE80 | https://github.com/ocr-algorithm-and-data/CUTE80 | `TBD` | - |
-| IIIT5K | https://github.com/ocr-algorithm-and-data/IIIT5K | `TBD` | - |
-| SVT | https://github.com/ocr-algorithm-and-data/SVT | `TBD` | Remove all subdirs, but the dir `test_crop`. Rename this dir to `img` |
-| SVTP | https://github.com/ocr-algorithm-and-data/SVT-Perspective | `TBD` | - |
+| ICDAR2013 | https://github.com/ocr-algorithm-and-data/ICDAR2013 | [download](https://bartzi.de/documents/attachment/download?hash_value=4e1c652bf62fb2e454cb65c3d996f592_30) | Rename the directory `test` to `Challenge2_Test_Task3_Images` |
+| ICDAR2015 | https://github.com/ocr-algorithm-and-data/ICDAR2015 | [download](https://bartzi.de/documents/attachment/download?hash_value=8fdafd36ce2e1108913081fd247e54b4_31) | Rename the dir `TestSet` to `ch4_test_word_images_gt` |
+| CUTE80 | https://github.com/ocr-algorithm-and-data/CUTE80 | [download](https://bartzi.de/documents/attachment/download?hash_value=340f042991cf752d0ba6c700afa1bdb0_28) | - |
+| IIIT5K | https://github.com/ocr-algorithm-and-data/IIIT5K | [download](https://bartzi.de/documents/attachment/download?hash_value=af4799078f54a0138d43010563301d8b_32) | - |
+| SVT | https://github.com/ocr-algorithm-and-data/SVT | [download](https://bartzi.de/documents/attachment/download?hash_value=f7b99cc79d9b5bcecb1e755f4b5b1038_33) | Remove all subdirs, but the dir `test_crop`. Rename this dir to `img` |
+| SVTP | https://github.com/ocr-algorithm-and-data/SVT-Perspective | [download](https://bartzi.de/documents/attachment/download?hash_value=36238a96473f2a604f8bf4c6874de55c_34) | - |
 
 # Training
  
@@ -133,5 +133,12 @@ This code is licensed under GPLv3, see the file `LICENSE` for more information.
 
 If you find this code useful, please cite our paper:
 ```bibtex
-TBD!
+@misc{bartz2019kiss,
+    title={KISS: Keeping It Simple for Scene Text Recognition},
+    author={Christian Bartz and Joseph Bethge and Haojin Yang and Christoph Meinel},
+    year={2019},
+    eprint={1911.08400},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
 ```
