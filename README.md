@@ -15,6 +15,8 @@ directory as `<model_dir>`.
 - make sure you have at least Python **3.7** installed on your system
 - create a new virtual environment (or whatever you like to use)
 - install all requirements with `pip install -r requirements.txt`
+(if you do not have a CUDA capable device in your PC, you should remove
+the package `cupy` from the file `requirements.txt`).
 
 # Datasets
 
