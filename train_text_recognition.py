@@ -35,7 +35,7 @@ def main():
     parser = argparse.ArgumentParser(description="Train a KISS model", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("log_name", help="name of log")
     parser.add_argument("-c", "--config", default="config.cfg", help="path to config file to use")
-    parser.add_argument("-g", "--gpu", type=int, nargs='+', default=[-1], help="gpu if to use (-1 means cpu)")
+    parser.add_argument("-g", "--gpu", nargs='+', default=["-1"], help="gpu if to use (-1 means cpu)")
     parser.add_argument("-l", "--log-dir", default='sheep_logs', help="path to log dir")
     parser.add_argument("--snapshot-interval", type=int, default=10000, help="number of iterations after which a snapshot will be taken")
     parser.add_argument("--log-interval", type=int, default=100, help="log interval")

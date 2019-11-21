@@ -182,8 +182,8 @@ class BBOXPlotter(Extension):
     def __call__(self, trainer):
         iteration = trainer.updater.iteration
 
-        with cuda.get_device_from_id(trainer.updater.get_optimizer('opt_gen').target._device_id), chainer.using_config('train', False):
-            self.xp = np if trainer.updater.get_optimizer('opt_gen').target._device_id < 0 else cuda.cupy
+        with chainer.using_device(trainer.updater.get_optimizer('opt_gen').target.device), chainer.using_config('train', False):
+            self.xp = trainer.updater.get_optimizer('opt_gen').target.device.xp
             image = self.xp.asarray(self.image)
             predictions = self.get_predictions(image)
 

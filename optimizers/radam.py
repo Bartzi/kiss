@@ -156,8 +156,8 @@ class RAdamRule(optimizer.UpdateRule):
 
         m_hat = m / (1 - hp.beta1 ** self.t)
         if rho_t >= 5:
-            v_hat = math.sqrt(v / (1 - beta2_t))
-            r_t = math.sqrt(
+            v_hat = numpy.sqrt(v / (1 - beta2_t))
+            r_t = numpy.sqrt(
                 ((rho_t - 4) * (rho_t - 2) * self.rho_max) /
                 ((self.rho_max - 4) * (self.rho_max - 2) * rho_t)
             )

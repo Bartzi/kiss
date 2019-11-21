@@ -47,7 +47,7 @@ class TransformerTextRecognitionUpdater(chainer.training.StandardUpdater):
         ]
 
     def update_core(self):
-        with self.device.device:
+        with chainer.using_device(self.device):
             loss_localizer = self.update_localizer()
             # loss_recognizer = self.update_recognizer()
 

@@ -102,9 +102,9 @@ class Evaluator:
         )
 
         if args.gpu is not None:
-            self.localizer.to_gpu(args.gpu)
+            self.localizer.to_device(args.gpu)
             if self.recognizer is not None:
-                self.recognizer.to_gpu(args.gpu)
+                self.recognizer.to_device(args.gpu)
 
         self.evaluator = TextRecognitionTestFunction(
             self.localizer,
@@ -159,9 +159,9 @@ class Evaluator:
 
     def evaluate(self, snapshot_name=''):
         reporter = reporter_module.Reporter()
-        current_device = cuda.get_device_from_id(self.args.gpu)
+        current_device = chainer.get_device(self.args.gpu)
         summary = reporter_module.DictSummary()
-        with current_device, reporter, configuration.using_config('train', False):
+        with chainer.using_device(current_device), reporter, configuration.using_config('train', False):
             for i, batch in enumerate(tqdm(self.data_iterator, total=len(self.data_loader) // self.args.batchsize)):
                 observation = {}
                 batch = concat_examples(batch, self.args.gpu)
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     parser.add_argument("model_dir", help="path to directory containing train results")
     parser.add_argument("snapshot_prefix", help="prefix of snapshots to evaluate")
     parser.add_argument("--log-name", default="log", help="name of the log file [default: log]")
-    parser.add_argument("--gpu", "-g", type=int, help="gpu to use [default: use cpu]")
+    parser.add_argument("--gpu", "-g", help="gpu to use [default: use cpu]")
     parser.add_argument("--num-samples", "-n", type=int, help="max number of samples to test [default: test all]")
     parser.add_argument("--batchsize", "-b", type=int, default=1, help="number of images to evaluate at once [default: 1]")
     parser.add_argument("--save-predictions", action='store_true', default=False, help="use bbox plotter to store the predicted bboxes for every test sample")

@@ -1,3 +1,4 @@
+import chainer
 import numpy
 import re
 from chainer import reporter
@@ -177,7 +178,7 @@ class TextRecognitionTestFunction(TextRecognitionEvaluatorFunction):
         batch_size, images_per_image, num_channels, height, width = image.shape
         image = self.xp.reshape(image, (-1, num_channels, height, width))
 
-        with cuda.Device(self.device):
+        with chainer.using_device(self.device):
             rois, bboxes = self.localizer.predict(image)[:2]
             predicted_words, raw_classification_result = self.recognizer.predict(rois, return_raw_classification_result=True)
             predicted_words = F.reshape(predicted_words, (batch_size, images_per_image) + predicted_words.shape[1:])
