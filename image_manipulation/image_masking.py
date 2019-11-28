@@ -4,49 +4,50 @@ from chainer.backends import cuda
 
 from train_utils.datatypes import Size
 
-create_mask_kernel = cuda.cupy.ElementwiseKernel(
-    'T originalMask, raw T corners, int32 inputHeight, int32 inputWidth, T fillValue',
-    'T mask',
-    '''
-        // determine our current position in the array
-        int w = i % inputWidth;
-        int h = (i / inputWidth) % inputHeight;
-        int batchIndex = i / inputWidth / inputHeight;
-        int cornerIndex = batchIndex * 4 * 2;
-
-        // calculate vectors for each side of the box
-        int2 topVec = {
-            corners[cornerIndex + 1 * 2] - corners[cornerIndex],
-            corners[cornerIndex + 1 * 2 + 1] - corners[cornerIndex + 1]
-        };
-
-        int2 bottomVec = {
-            corners[cornerIndex + 3 * 2] - corners[cornerIndex + 2 * 2],
-            corners[cornerIndex + 3 * 2 + 1] - corners[cornerIndex + 2 * 2 + 1]
-        };
-
-        int2 leftVec = {
-            corners[cornerIndex] - corners[cornerIndex + 3 * 2],
-            corners[cornerIndex + 1] - corners[cornerIndex + 3 * 2 + 1]
-        }; 
-
-        int2 rightVec = {
-            corners[cornerIndex + 2 * 2] - corners[cornerIndex + 1 * 2],
-            corners[cornerIndex + 2 * 2 + 1] - corners[cornerIndex + 1 * 2 + 1]
-        };
-
-        // calculate cross product for each side of array
-        int crossTop = topVec.x * (h - corners[cornerIndex + 1]) - topVec.y * (w - corners[cornerIndex]);
-        int crossRight = rightVec.x * (h - corners[cornerIndex + 3]) - rightVec.y * (w - corners[cornerIndex + 2]);
-        int crossBottom = bottomVec.x * (h - corners[cornerIndex + 5]) - bottomVec.y * (w - corners[cornerIndex + 4]);
-        int crossLeft = leftVec.x * (h - corners[cornerIndex + 7]) - leftVec.y * (w - corners[cornerIndex + 6]);
-
-        // our point is inside as long as every cross product is greater or equal to 0
-        bool inside = crossTop >= 0 && crossRight >= 0 && crossBottom >= 0 && crossLeft >= 0;
-
-        mask = inside ? fillValue : originalMask;
-    ''',
-    name='bbox_to_mask',
+if cuda.available:
+    create_mask_kernel = cuda.cupy.ElementwiseKernel(
+        'T originalMask, raw T corners, int32 inputHeight, int32 inputWidth, T fillValue',
+        'T mask',
+        '''
+            // determine our current position in the array
+            int w = i % inputWidth;
+            int h = (i / inputWidth) % inputHeight;
+            int batchIndex = i / inputWidth / inputHeight;
+            int cornerIndex = batchIndex * 4 * 2;
+    
+            // calculate vectors for each side of the box
+            int2 topVec = {
+                corners[cornerIndex + 1 * 2] - corners[cornerIndex],
+                corners[cornerIndex + 1 * 2 + 1] - corners[cornerIndex + 1]
+            };
+    
+            int2 bottomVec = {
+                corners[cornerIndex + 3 * 2] - corners[cornerIndex + 2 * 2],
+                corners[cornerIndex + 3 * 2 + 1] - corners[cornerIndex + 2 * 2 + 1]
+            };
+    
+            int2 leftVec = {
+                corners[cornerIndex] - corners[cornerIndex + 3 * 2],
+                corners[cornerIndex + 1] - corners[cornerIndex + 3 * 2 + 1]
+            }; 
+    
+            int2 rightVec = {
+                corners[cornerIndex + 2 * 2] - corners[cornerIndex + 1 * 2],
+                corners[cornerIndex + 2 * 2 + 1] - corners[cornerIndex + 1 * 2 + 1]
+            };
+    
+            // calculate cross product for each side of array
+            int crossTop = topVec.x * (h - corners[cornerIndex + 1]) - topVec.y * (w - corners[cornerIndex]);
+            int crossRight = rightVec.x * (h - corners[cornerIndex + 3]) - rightVec.y * (w - corners[cornerIndex + 2]);
+            int crossBottom = bottomVec.x * (h - corners[cornerIndex + 5]) - bottomVec.y * (w - corners[cornerIndex + 4]);
+            int crossLeft = leftVec.x * (h - corners[cornerIndex + 7]) - leftVec.y * (w - corners[cornerIndex + 6]);
+    
+            // our point is inside as long as every cross product is greater or equal to 0
+            bool inside = crossTop >= 0 && crossRight >= 0 && crossBottom >= 0 && crossLeft >= 0;
+    
+            mask = inside ? fillValue : originalMask;
+        ''',
+        name='bbox_to_mask',
 )
 
 

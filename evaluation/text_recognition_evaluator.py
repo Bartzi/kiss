@@ -11,23 +11,24 @@ from evaluation.rotation_detection_evaluator import RotationMAPEvaluator
 from image_manipulation.image_masking import ImageMasker
 from train_utils.tensorboard_utils import TensorboardEvaluator
 
-num_word_kernel = cuda.cupy.ElementwiseKernel(
-    "raw T wordPrediction, int32 blankLabelClass, int32 maxWordLength",
-    "raw int32 outElement",
-    """
-        // if we did not predict a blank label, the output of our function will be the full length 
-        outElement[i] = maxWordLength;
-        
-        for (int j=0; j<maxWordLength; ++j) {
-        // determine whether we are at the end of the word, if so we save the current position as output
-            if (wordPrediction[i * maxWordLength + j] == blankLabelClass) {
-                outElement[i] = j;
-                break;
+if cuda.available:
+    num_word_kernel = cuda.cupy.ElementwiseKernel(
+        "raw T wordPrediction, int32 blankLabelClass, int32 maxWordLength",
+        "raw int32 outElement",
+        """
+            // if we did not predict a blank label, the output of our function will be the full length 
+            outElement[i] = maxWordLength;
+            
+            for (int j=0; j<maxWordLength; ++j) {
+            // determine whether we are at the end of the word, if so we save the current position as output
+                if (wordPrediction[i * maxWordLength + j] == blankLabelClass) {
+                    outElement[i] = j;
+                    break;
+                }
             }
-        }
-    """,
-    name="word_length_determination"
-)
+        """,
+        name="word_length_determination"
+    )
 
 
 class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
@@ -46,7 +47,7 @@ class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
         words = kwargs.pop('words', None)
         return_predictions = kwargs.pop('return_predictions', False)
 
-        with cuda.Device(self.device):
+        with chainer.using_device(self.device):
             rois, bboxes = self.localizer.predict(image)[:2]
             predicted_words = self.recognizer.predict(rois).array
             self.xp = cuda.get_array_module(bboxes)

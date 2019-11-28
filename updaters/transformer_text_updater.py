@@ -10,21 +10,22 @@ from common.utils import DirectionLossCalculator, OutOfImageLossCalculator, Size
 from train_utils.disable_chain import disable_chains
 from train_utils.autocopy import change_device_of
 
-num_word_kernel = cuda.cupy.ElementwiseKernel(
-    "T element, raw int32 numWordIndicator, int32 numBoxes, T wordValue, T noWordValue",
-    "T outElement",
-    """
-        // determine current batch position and also position in word
-        int wordPosition = i % numBoxes;
-        int batchPosition = i / numBoxes;
-
-        // determine at which position in the word we have to change the label
-        T labelIndicator = numWordIndicator[batchPosition];
-
-        outElement = wordPosition < labelIndicator ? wordValue : noWordValue; 
-    """,
-    name="num_word_iou"
-)
+if cuda.available:
+    num_word_kernel = cuda.cupy.ElementwiseKernel(
+        "T element, raw int32 numWordIndicator, int32 numBoxes, T wordValue, T noWordValue",
+        "T outElement",
+        """
+            // determine current batch position and also position in word
+            int wordPosition = i % numBoxes;
+            int batchPosition = i / numBoxes;
+    
+            // determine at which position in the word we have to change the label
+            T labelIndicator = numWordIndicator[batchPosition];
+    
+            outElement = wordPosition < labelIndicator ? wordValue : noWordValue; 
+        """,
+        name="num_word_iou"
+    )
 
 
 class TransformerTextRecognitionUpdater(chainer.training.StandardUpdater):
@@ -170,7 +171,7 @@ class TransformerRecognizerOnlyUpdater(chainer.training.StandardUpdater):
         super().__init__(*args, **kwargs)
 
     def update_core(self):
-        with self.device.device:
+        with chainer.using_device(self.device):
             loss_recognizer = self.update_recognizer()
 
             self.log_results({
