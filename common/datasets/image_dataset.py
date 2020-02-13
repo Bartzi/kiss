@@ -2,6 +2,7 @@ import json
 
 import chainer
 import numpy
+numpy.random.bit_generator = numpy.random._bit_generator
 import os
 import six
 from PIL import Image
