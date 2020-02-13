@@ -73,7 +73,7 @@ class TransformerTextRecognizer(Chain):
         feature_map = self.extract_features(images)
         memory = self.transformer.encode(feature_map, None)
 
-        target = self.get_bos_token_array(len(images), self.num_words)
+        target = self.get_bos_token_array(len(feature_map), self.num_words)
         target = self.xp.reshape(target, (-1, 1))
         char = None
 
@@ -83,7 +83,7 @@ class TransformerTextRecognizer(Chain):
             predicted_chars = self.decode_prediction(char)
             target = F.concat([target, predicted_chars[:, -1:]])
 
-        result = F.expand_dims(target[:, 1:], 1)
+        result = F.reshape(target[:, 1:], (len(feature_map), self.num_words, self.num_chars))
         if return_raw_classification_result:
             return result, char
         return result
