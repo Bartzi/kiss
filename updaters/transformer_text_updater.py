@@ -92,13 +92,18 @@ class TransformerTextRecognitionUpdater(chainer.training.StandardUpdater):
         localizer_losses = {
             'loss': loss_localizer,
         }
+
+        loss_localizer.unchain_backward()
+        del loss_localizer
+
         return localizer_losses
 
     def log_results(self, losses):
         def log(base_name, losses):
+            triggered = self.tensorboard_trigger(self.mocked_trainer)
             for loss_type, loss_value in losses.items():
                 chainer.reporter.report({f"{base_name}/{loss_type}": loss_value})
-                if self.tensorboard_handle is not None and self.tensorboard_trigger(self.mocked_trainer):
+                if self.tensorboard_handle is not None and triggered:
                     self.tensorboard_handle.add_scalar(f"{base_name}/{loss_type}", float(loss_value.data),
                                                        self.iteration)
 
