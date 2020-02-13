@@ -61,7 +61,7 @@ class TextLocalizer(Chain):
 
     @maybe_copy
     def predict(self, images, return_visual_backprop=False):
-        with cuda.Device(self._device_id):
+        with chainer.using_device(self.device):
             if isinstance(images, list):
                 images = [self.xp.array(image) for image in images]
                 images = self.xp.stack(images, axis=0)
