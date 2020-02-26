@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 import numpy as np
 
 from imgaug import augmenters as iaa
@@ -10,7 +12,19 @@ class FSNSDataset(TextRecognitionImageDataset):
 
     def __init__(self, *args, **kwargs):
         kwargs['resize_after_load'] = False
+        self.jump_to_max_level = kwargs.pop('jump_to_max_level', False)
         super().__init__(*args, **kwargs)
+        self.word_lengths = self.get_length_index_map()
+
+        self.level = min(self.word_lengths.keys())
+        if self.jump_to_max_level:
+            self.level = max(self.word_lengths.keys())
+
+    def level_up(self):
+        self.level = min(self.level + 1, len(self.word_lengths))
+
+    def __len__(self):
+        return len(self.word_lengths[self.level])
 
     @property
     def num_chars_per_word(self):
@@ -22,6 +36,18 @@ class FSNSDataset(TextRecognitionImageDataset):
 
     def get_word(self, i):
         return self.get_gt_item('text', i)
+
+    def get_length_index_map(self):
+        # returns a dict that maps word lengths to their corresponding ids
+        lengths = defaultdict(list)
+        for i in range(super().__len__()):
+            line = self.get_word(i)
+            word_length = 0
+            for word_length, word in enumerate(line):
+                if all([char == self.char_map[str(self.blank_label)] for char in word]):
+                    break
+            lengths[word_length].append(i)
+        return dict(lengths)
 
     def get_words(self, i):
         words = self.get_word(i)
@@ -60,3 +86,14 @@ class FSNSDataset(TextRecognitionImageDataset):
         else:
             augmentations = None
         return augmentations
+
+    def get_gt_index(self, index):
+        assert index <= len(self), f"Index {index} in FSNS dataset is larger than it should be. Should be max. {len(self)}"
+        base_index = 0
+        for level in range(min(self.word_lengths.keys()), self.level + 1):
+            if base_index + len(self.word_lengths[level]) > index:
+                return self.word_lengths[level][index - base_index]
+
+    def get_example(self, i):
+        i = self.get_gt_index(i)
+        return super().get_example(i)

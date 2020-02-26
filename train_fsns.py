@@ -19,6 +19,7 @@ from evaluation.text_recognition_evaluator import TextRecognitionEvaluatorFuncti
 from insights.fsns_bbox_plotter import FSNSBBoxPlotter
 from insights.tensorboard_gradient_histogram import TensorboardGradientPlotter
 from insights.text_recognition_bbox_plotter import TextRecognitionBBoxPlotter
+from iterators.curriculum_iterator import CurriculumIterator
 from optimizers.radam import RAdam
 from text.fsns import FSNSTransformerRecognizer, FSNSLSTMLocalizer
 from text.lstm_text_localizer import LSTMTextLocalizer
@@ -114,6 +115,7 @@ def main():
             transform_probability=0,
             keep_aspect_ratio=True,
             image_mode=args.image_mode,
+            jump_to_max_level=True,
             **validation_kwargs,
         )
     else:
@@ -122,7 +124,7 @@ def main():
     train_dataset = scatter_dataset(train_dataset, comm)
     validation_dataset = scatter_dataset(validation_dataset, comm)
 
-    data_iter = chainer.iterators.MultithreadIterator(train_dataset, args.batch_size)
+    data_iter = CurriculumIterator(train_dataset, args.batch_size, curriculum_shift_interval=3)
     validation_iter = chainer.iterators.MultithreadIterator(validation_dataset, args.batch_size, repeat=False)
 
     localizer = FSNSLSTMLocalizer(
@@ -270,6 +272,7 @@ def main():
                 transform_probability=0,
                 keep_aspect_ratio=True,
                 image_mode=args.image_mode,
+                jump_to_max_level=True,
                 **test_kwargs,
             )
             test_iter = chainer.iterators.MultithreadIterator(test_dataset, args.batch_size, repeat=False)
