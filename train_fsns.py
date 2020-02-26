@@ -345,7 +345,7 @@ def main():
         # learning rate shift after each epoch
         trainer.extend(
             extensions.ExponentialShift("alpha", 0.1, optimizer=localizer_optimizer),
-            trigger=(1, 'epoch')
+            trigger=(10, 'epoch')
         )
 
         trainer.extend(extensions.ProgressBar(update_interval=10))
