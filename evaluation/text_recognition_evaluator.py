@@ -73,12 +73,16 @@ class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
         for predicted_image, gt_image in zip(predicted_words, words):
             num_correct_words_per_image = 0
             num_correct_case_insensitive_words_per_image = 0
+            num_words_per_image = 0
 
             for predicted_word, gt_word in zip(predicted_image, gt_image):
                 predicted_word = ''.join(self.char_map[str(int(char))] for char in predicted_word)
                 predicted_word = re.sub(self.blank_label_pattern, '', predicted_word)
                 gt_word = ''.join(self.char_map[str(int(char))] for char in gt_word)
                 gt_word = re.sub(self.blank_label_pattern, '', gt_word)
+
+                if len(gt_word) == 0:
+                    continue
 
                 if strip_non_alphanumeric_predictions:
                     predicted_word = re.sub(r'[\W_]', '', predicted_word)
@@ -91,10 +95,11 @@ class TextRecognitionEvaluatorFunction(RotationMAPEvaluator):
                 if predicted_word.lower() == gt_word.lower():
                     num_correct_case_insensitive_words_per_image += 1
                 num_words += 1
+                num_words_per_image += 1
 
-            if num_correct_words_per_image == len(gt_image):
+            if num_correct_words_per_image == num_words_per_image:
                 num_correct_lines += 1
-            if num_correct_case_insensitive_words_per_image == len(gt_image):
+            if num_correct_case_insensitive_words_per_image == num_words_per_image:
                 num_case_insensitive_correct_lines += 1
 
             num_correct_words += num_correct_words_per_image
