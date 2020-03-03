@@ -104,6 +104,7 @@ def main():
             transform_probability=0.4,
             keep_aspect_ratio=True,
             image_mode=args.image_mode,
+            start_level=2,
             **train_kwargs,
         )
 
@@ -121,10 +122,10 @@ def main():
     else:
         train_dataset, validation_dataset = None, None
 
-    train_dataset = scatter_dataset(train_dataset, comm)
-    validation_dataset = scatter_dataset(validation_dataset, comm)
+    # train_dataset = scatter_dataset(train_dataset, comm)
+    # validation_dataset = scatter_dataset(validation_dataset, comm)
 
-    data_iter = CurriculumIterator(train_dataset, args.batch_size, curriculum_shift_interval=3)
+    data_iter = CurriculumIterator(train_dataset, args.batch_size, curriculum_shift_intervals=[5, 10, 15, 20])
     validation_iter = chainer.iterators.MultithreadIterator(validation_dataset, args.batch_size, repeat=False)
 
     localizer = FSNSLSTMLocalizer(

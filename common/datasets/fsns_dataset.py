@@ -13,10 +13,18 @@ class FSNSDataset(TextRecognitionImageDataset):
     def __init__(self, *args, **kwargs):
         kwargs['resize_after_load'] = False
         self.jump_to_max_level = kwargs.pop('jump_to_max_level', False)
+        self.start_level = kwargs.pop('start_level', None)
         super().__init__(*args, **kwargs)
         self.word_lengths = self.get_length_index_map()
 
-        self.level = min(self.word_lengths.keys())
+        print("Dataset statistics:")
+        print({k: len(v) for k, v in self.word_lengths.items()})
+
+        if self.start_level is not None:
+            self.level = self.start_level
+        else:
+            self.level = min(self.word_lengths.keys())
+
         if self.jump_to_max_level:
             self.level = max(self.word_lengths.keys())
 
@@ -24,7 +32,7 @@ class FSNSDataset(TextRecognitionImageDataset):
         self.level = min(self.level + 1, len(self.word_lengths))
 
     def __len__(self):
-        return len(self.word_lengths[self.level])
+        return sum(len(self.word_lengths[level]) for level in range(min(self.word_lengths.keys()), self.level + 1))
 
     @property
     def num_chars_per_word(self):
@@ -91,9 +99,12 @@ class FSNSDataset(TextRecognitionImageDataset):
         assert index <= len(self), f"Index {index} in FSNS dataset is larger than it should be. Should be max. {len(self)}"
         base_index = 0
         for level in range(min(self.word_lengths.keys()), self.level + 1):
-            if base_index + len(self.word_lengths[level]) > index:
+            len_of_current_level = len(self.word_lengths[level])
+            if base_index + len_of_current_level > index:
                 return self.word_lengths[level][index - base_index]
+            base_index += len_of_current_level
+        raise RuntimeError("Could not get the correct index!")
 
     def get_example(self, i):
-        i = self.get_gt_index(i)
-        return super().get_example(i)
+        index = self.get_gt_index(i)
+        return super().get_example(index)
