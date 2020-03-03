@@ -21,7 +21,7 @@ from insights.tensorboard_gradient_histogram import TensorboardGradientPlotter
 from insights.text_recognition_bbox_plotter import TextRecognitionBBoxPlotter
 from iterators.curriculum_iterator import CurriculumIterator
 from optimizers.radam import RAdam
-from text.fsns import FSNSTransformerRecognizer, FSNSLSTMLocalizer
+from text.fsns import FSNSTransformerRecognizer, FSNSLSTMLocalizer, FSNSTransformerLocalizer
 from text.lstm_text_localizer import LSTMTextLocalizer
 from text.transformer_recognizer import TransformerTextRecognizer
 from train_utils.backup import get_import_info
@@ -143,6 +143,7 @@ def main():
         train_dataset.num_classes,
         train_dataset.bos_token,
         num_layers=args.num_layers,
+        transformer_size=2048,
     )
 
     if args.resume_recognizer is not None:
@@ -227,17 +228,17 @@ def main():
         if stats_cpu['iteration'] == args.log_interval:
             stats_cpu.update(data_to_log)
 
+    trainer.extend(
+        extensions.snapshot(filename='trainer_snapshot', autoload=args.resume is not None),
+        trigger=(args.snapshot_interval, 'iteration')
+    )
+
     if comm.rank == 0:
         for model in models:
             trainer.extend(
                 extensions.snapshot_object(model, model.__class__.__name__ + '_{.updater.iteration}.npz'),
-                trigger=lambda trainer: trainer.updater.is_new_epoch or trainer.updater.iteration % args.snapshot_interval == 0,
+                trigger=(args.snapshot_interval, 'iteration')
             )
-
-        trainer.extend(
-            extensions.snapshot(filename='trainer_snapshot', autoload=args.resume is not None),
-            trigger=(args.snapshot_interval, 'iteration')
-        )
 
         evaluation_function = TextRecognitionEvaluatorFunction(localizer, recognizer, args.gpu, train_dataset.blank_label, train_dataset.char_map)
 
