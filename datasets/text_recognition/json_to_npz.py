@@ -44,12 +44,12 @@ def main(args):
             if isinstance(value, list):
                 if np.array(value).dtype.kind not in set('buifc'):
                     value = ''.join([v[0] for v in value])
-                value = np.array(value)
+            value = np.array(value)
             converted_gt[key].append(value)
 
     converted_gt = dict(converted_gt)
     for key in converted_gt.keys():
-        converted_gt[key] = np.array(converted_gt[key])
+        converted_gt[key] = np.array(converted_gt[key], dtype=object)
 
     if args.destination is None:
         file_path = os.path.splitext(args.json_file)[0]

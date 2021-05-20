@@ -158,7 +158,7 @@ def main():
     models = [localizer, recognizer]
 
     if comm.rank == 0:
-        tensorboard_handle = SummaryWriter(log_dir=args.log_dir, graph=None)
+        tensorboard_handle = SummaryWriter(log_dir=args.log_dir)
     else:
         tensorboard_handle = None
 
