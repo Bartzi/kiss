@@ -2,7 +2,7 @@ chainer==6.5.0
 chainercv==0.13.1
 cupy==6.5.0
 imgaug==0.3.0
-numpy==1.16.3
+numpy==1.22.0
 opencv-python-headless
 Pillow==6.2.0
 scikit-learn==0.20.2
